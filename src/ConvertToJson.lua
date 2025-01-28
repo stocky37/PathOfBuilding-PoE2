@@ -23,48 +23,45 @@ function LoadModule(fileName, ...)
 	end
 end
 
-function exportData(item)
-	local file = io.open("json/" .. item .. ".json", "w")
-  file:write(json.encode(data[item]))
-  file:close()
+function cleanTable(o, stack)
+	if type(o) ~= 'table' then return o end
+	
+	local t = {}
+	for k,v in pairs(o) do
+		if type(k) ~= 'table' and type(v) ~= 'function' then
+			if type(v) == 'table' then
+				t[k] = cleanTable(v)
+			else
+				t[k] = v
+			end -- if type(v) == 'table' then
+		end -- if type(k) ~= 'table' and type(v) ~= 'function' then
+	end -- for k,v in pairs(o) do
+	
+	return t
+end
+
+local function exportJson(filename, o)
+	if not filename:match("%.json") then
+    filename = filename .. ".json"
+  end
+	local f = io.open("json/" .. filename, "w")
+  f:write(json.encode(cleanTable(o)))
+  f:close()
 end
 
 LoadModule("GameVersions")
 LoadModule("Modules/Common")
 LoadModule("Modules/Data")
+LoadModule("Data/Global")
 
-data.gems = LoadModule("Data/Gems")
 
--- exportData("powerStatList")
-exportData("itemMods")
-exportData("skillColorMap")
-exportData("cursePriority")
-exportData("keystones")
-exportData("ailmentTypeList")
-exportData("elementalAilmentTypeList")
-exportData("nonDamagingAilmentTypeList")
-exportData("nonElementalAilmentTypeList")
-exportData("nonDamagingAilment")
-exportData("modScalability")
-exportData("highPrecisionMods")
-exportData("weaponTypeInfo")
-exportData("unarmedWeaponData")
-exportData("itemMods")
-exportData("itemTagSpecial")
-exportData("itemTagSpecialExclusionPattern")
-exportData("bosses")
-exportData("bossSkills")
-exportData("bossStats")
-exportData("enemyIsBossTooltip")
+-- export all data items
+for k,v in pairs(data) do
+	if type(v) == "table" then
+		exportJson(k, v)
+	end
+end
 
-exportData("skillStatMap")
-exportData("gems")
-exportData("minions")
-exportData("itemBases")
-exportData("itemBaseTypeList")
-exportData("uniques")
-exportData("questRewards")
-
--- exportData("skills")
--- exportData("mapMods")
-
+-- export other misc data
+exportJson("skillTypes.json", SkillType)
+exportJson("colorCodes.json", colorCodes)
